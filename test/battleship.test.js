@@ -49,6 +49,7 @@ describe('placeShips', () => {
         ship.place(1, 1, 'vertical');
         expect(ship.coordinates).toEqual([[1,1], [2,1]]);
     });
+
     test('should throw error when ship goes outside board horizontally', () => {
         const ship = createShips(3);
         expect(() => {
@@ -102,7 +103,7 @@ describe('receiveAttacks', () => {
         const gameboard = createGameboard();
         gameboard.receivedAttack(1, 1);
 
-        expect(gameboard.missedShots).toBe([1, 1]);
+        expect(gameboard.missedShots).toEqual([1, 1]);
     });
 
     test ('should keep track of missed shots', () => {
