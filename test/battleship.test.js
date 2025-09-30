@@ -103,7 +103,7 @@ describe('receiveAttacks', () => {
         const gameboard = createGameboard();
         gameboard.receivedAttack(1, 1);
 
-        expect(gameboard.missedShots).toEqual([1, 1]);
+        expect(gameboard.missedShots).toEqual([[1, 1]]);
     });
 
     test ('should keep track of missed shots', () => {

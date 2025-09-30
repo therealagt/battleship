@@ -10,7 +10,7 @@ function createShips(length) {
         coordinates: [],
     
         hit() {
-            return this.numOfHits++;
+            return this.numOfHits += 1;
         },
 
         isSunk() {
@@ -49,6 +49,7 @@ function createGameboard() {
     return {
         ships: [],
         missedShots: [], 
+        hitShots: [],
 
         placeShip(ship, x, y, orientation) {
             ship.place(x, y, orientation);
@@ -61,17 +62,44 @@ function createGameboard() {
                         }
                     }
                 }
-            }
+            };
 
         this.ships.push(ship);
         },
     
         receivedAttack(x, y) {
+            if (x < 0 || y < 0 || x >= BOARD_SIZE || y >= BOARD_SIZE) {
+                throw new Error('Attack outside of board.')
+            }
+            for (let hitCoord of this.hitShots) {
+                if (hitCoord[0] === x && hitCoord[1] === y) {
+                    throw new Error('Already attacked.');
+                }
+            }
+            for (let missedCoord of this.missedShots) {
+                if (missedCoord[0] === x && missedCoord[1] === y) {
+                    throw new Error('Already attacked.')
+                }
+            }
 
+            let hit = false; 
+            for (let ship of this.ships) {
+                for (let coord of ship.coordinates) {
+                    if (coord[0] === x && coord[1] === y) {
+                        ship.hit();
+                        this.hitShots.push([x, y]);
+                        hit = true;
+                        break;
+                    }
+                }
+            }
+            if (!hit) {
+                this.missedShots.push([x, y]);
+            }
         },
 
         allShipsSunk() {
-
+            return this.ships.every(ship => ship.isSunk());
         }
     }
 }
