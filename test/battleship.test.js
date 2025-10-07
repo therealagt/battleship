@@ -1,4 +1,4 @@
-const { createShips, createGameboard } = require('../battleship');
+const { createShips, createGameboard, createPlayer, BOARD_SIZE } = require('../battleship');
 
 // Ship Factory Tests
 describe('createShips', () => {
@@ -161,4 +161,145 @@ describe('receiveAttacks', () => {
     });
 });
 
+// Player Factory Tests
+describe('createPlayer', () => {
+    test('should create a human player with gameboard', () => {
+        const player = createPlayer('human');
+        expect(player.gameboard).toBeDefined();
+        expect(player.type).toBe('human');
+    });
 
+    test('should create a computer player with gameboard', () => {
+        const player = createPlayer('computer');
+        expect(player.gameboard).toBeDefined();
+        expect(player.type).toBe('computer');
+    });
+
+    test('should be able to attack enemy gameboard', () => {
+        const human = createPlayer('human');
+        const computer = createPlayer('computer');
+        
+        const ship = createShips(2);
+        computer.gameboard.placeShip(ship, 0, 0, 'horizontal');
+        
+        human.attack(computer.gameboard, 0, 0);
+        expect(ship.numOfHits).toBe(1);
+    });
+});
+
+// Computer Player Tests
+describe('createPlayer - Computer AI', () => {
+    test('should create computer player with makeRandomAttack method', () => {
+        const computer = createPlayer('computer');
+        expect(computer.type).toBe('computer');
+        expect(typeof computer.makeRandomAttack).toBe('function');
+    });
+
+    test('should make random attacks on enemy gameboard', () => {
+        const computer = createPlayer('computer');
+        const enemy = createPlayer('human');
+        
+        const ship = createShips(3);
+        enemy.gameboard.placeShip(ship, 2, 2, 'horizontal');
+        
+        const attack = computer.makeRandomAttack(enemy.gameboard);
+        
+        expect(attack).toHaveLength(2); // [x, y] coordinates
+        expect(attack[0]).toBeGreaterThanOrEqual(0);
+        expect(attack[0]).toBeLessThan(BOARD_SIZE);
+        expect(attack[1]).toBeGreaterThanOrEqual(0);
+        expect(attack[1]).toBeLessThan(BOARD_SIZE);
+    });
+
+    test('should not attack same coordinates twice', () => {
+        const computer = createPlayer('computer');
+        const enemy = createPlayer('human');
+        
+        // Fülle fast das ganze Board (nur eine freie Stelle lassen)
+        for (let i = 0; i < BOARD_SIZE * BOARD_SIZE - 1; i++) {
+            computer.attackedCoordinates.push([Math.floor(i / BOARD_SIZE), i % BOARD_SIZE]);
+        }
+        
+        const attack = computer.makeRandomAttack(enemy.gameboard);
+        expect(attack).toEqual([9, 9]); // Sollte die letzte freie Stelle sein
+    });
+
+    test('should target adjacent coordinates after a hit', () => {
+        const computer = createPlayer('computer');
+        const enemy = createPlayer('human');
+        
+        const ship = createShips(3);
+        enemy.gameboard.placeShip(ship, 5, 5, 'horizontal');
+        
+        computer.attack(enemy.gameboard, 5, 5);
+        computer.targetAdjacent(5, 5, enemy.gameboard);
+        
+        // Verwende toContainEqual statt toContain für Array-Vergleich
+        expect(computer.priorityTargets).toContainEqual([4, 5]); 
+        expect(computer.priorityTargets).toContainEqual([6, 5]); 
+        expect(computer.priorityTargets).toContainEqual([5, 4]); 
+        expect(computer.priorityTargets).toContainEqual([5, 6]); 
+    });
+
+    test('should use priority targets before random attacks', () => {
+        const computer = createPlayer('computer');
+        const enemy = createPlayer('human');
+        
+        // Setze Priority Targets manuell
+        computer.priorityTargets = [[3, 3], [4, 4]];
+        
+        const attack1 = computer.makeRandomAttack(enemy.gameboard);
+        expect(attack1).toEqual([3, 3]); // Erstes Priority Target
+        
+        const attack2 = computer.makeRandomAttack(enemy.gameboard);
+        expect(attack2).toEqual([4, 4]); // Zweites Priority Target
+    });
+
+    test('should filter out invalid adjacent coordinates', () => {
+        const computer = createPlayer('computer');
+        const enemy = createPlayer('human');
+        
+        computer.targetAdjacent(0, 0, enemy.gameboard);
+        
+        expect(computer.priorityTargets).toContainEqual([1, 0]);
+        expect(computer.priorityTargets).toContainEqual([0, 1]);
+        
+        const hasInvalid = computer.priorityTargets.some(coord => 
+            coord[0] === -1 || coord[1] === -1
+        );
+        expect(hasInvalid).toBe(false);
+    });
+
+    test('should not target already attacked coordinates', () => {
+        const computer = createPlayer('computer');
+        const enemy = createPlayer('human');
+        
+        computer.attackedCoordinates = [[4, 5], [6, 5]];
+        computer.targetAdjacent(5, 5, enemy.gameboard);
+        
+        expect(computer.priorityTargets).not.toContainEqual([4, 5]);
+        expect(computer.priorityTargets).not.toContainEqual([6, 5]);
+        expect(computer.priorityTargets).toContainEqual([5, 4]);
+        expect(computer.priorityTargets).toContainEqual([5, 6]);
+    });
+
+    test('should handle hitting a ship correctly', () => {
+        const computer = createPlayer('computer');
+        const enemy = createPlayer('human');
+        
+        const ship = createShips(2);
+        enemy.gameboard.placeShip(ship, 3, 3, 'horizontal');
+        
+        // Mock Math.random um gezielten Angriff zu simulieren
+        const originalRandom = Math.random;
+        Math.random = () => 0.35; // Führt zu Koordinaten [3,5]
+        
+        computer.makeRandomAttack(enemy.gameboard);
+        
+        // Stelle sicher dass Treffer registriert wurde
+        expect(ship.numOfHits).toBe(1);
+        expect(enemy.gameboard.hitShots).toContainEqual([3, 3]);
+        
+        Math.random = originalRandom; // Restore original
+    });
+});

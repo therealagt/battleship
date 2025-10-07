@@ -62,7 +62,7 @@ function createGameboard() {
                         }
                     }
                 }
-            };
+            }
 
         this.ships.push(ship);
         },
@@ -70,17 +70,17 @@ function createGameboard() {
         receivedAttack(x, y) {
             if (x < 0 || y < 0 || x >= BOARD_SIZE || y >= BOARD_SIZE) {
                 throw new Error('Attack outside of board.')
-            }
+            };
             for (let hitCoord of this.hitShots) {
                 if (hitCoord[0] === x && hitCoord[1] === y) {
                     throw new Error('Already attacked.');
                 }
-            }
+            };
             for (let missedCoord of this.missedShots) {
                 if (missedCoord[0] === x && missedCoord[1] === y) {
                     throw new Error('Already attacked.')
                 }
-            }
+            };
 
             let hit = false; 
             for (let ship of this.ships) {
@@ -104,8 +104,72 @@ function createGameboard() {
     }
 }
 
+function createPlayer(type = 'human') {
+    const player = {
+        type: type,
+        gameboard: createGameboard(),
+        attackedCoordinates: [],
+        
+        attack(enemyGameboard, x, y) {
+            return enemyGameboard.receivedAttack(x, y);
+        }
+    };
+
+    if (type === 'computer') {
+        player.makeRandomAttack = function(enemyGameboard) {
+            let x, y;
+
+            if (this.priorityTargets && this.priorityTargets.length > 0) {
+                const target = this.priorityTargets.shift(); 
+                x = target[0];
+                y = target[1];
+            } else {
+                do {
+                    x = Math.floor(Math.random() * BOARD_SIZE);
+                    y = Math.floor(Math.random() * BOARD_SIZE);
+                } while (this.attackedCoordinates.some(coord => coord[0] === x && coord[1] === y));
+            }
+
+            this.attackedCoordinates.push([x, y]);
+            
+            try {
+                this.attack(enemyGameboard, x, y);
+                
+                if (enemyGameboard.hitShots.some(coord => coord[0] === x && coord[1] === y)) {
+                    this.targetAdjacent(x, y, enemyGameboard);
+                }
+                
+                return [x, y];
+            } catch (error) {
+                console.log(error.message);
+                return null;
+            }
+        };
+        
+        player.targetAdjacent = function(x, y, enemyGameboard) {
+            const adjacent = [
+                [x-1, y], [x+1, y], [x, y-1], [x, y+1]
+            ].filter(coord => 
+                coord[0] >= 0 && coord[0] < BOARD_SIZE && 
+                coord[1] >= 0 && coord[1] < BOARD_SIZE &&
+                !this.attackedCoordinates.some(attacked => attacked[0] === coord[0] && attacked[1] === coord[1])
+            );
+
+            if (!this.priorityTargets) {
+                this.priorityTargets = [];
+            }
+            
+            this.priorityTargets.push(...adjacent);
+        };
+    }
+
+    return player; 
+}
+
 
 module.exports = {
     createShips,
-    createGameboard
+    createGameboard,
+    createPlayer,
+    BOARD_SIZE
 };
