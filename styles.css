@@ -1,0 +1,216 @@
+/* Battleship Game Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #1a1a2e;
+    color: #eee;
+    text-align: center;
+}
+
+h1 {
+    color: #16213e;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+h2 {
+    color: #0f3460;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+/* Game Layout */
+.game-container {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+#player-board, #computer-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Board Styles */
+.board {
+    display: grid;
+    grid-template-columns: repeat(10, 35px);
+    grid-template-rows: repeat(10, 35px);
+    gap: 1px;
+    border: 3px solid #16213e;
+    background-color: #16213e;
+    padding: 5px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* Cell Styles */
+.cell {
+    width: 35px;
+    height: 35px;
+    background-color: #0f3460;
+    border: 1px solid #16213e;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.cell:hover {
+    background-color: #1a4a6b;
+    transform: scale(1.05);
+}
+
+/* Ship Styles */
+.cell.ship {
+    background-color: #1e40af;
+    border: 1px solid #3b82f6;
+}
+
+.cell.ship::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    background-color: #3b82f6;
+    border-radius: 3px;
+    opacity: 0.8;
+}
+
+/* Hit Styles */
+.cell.hit {
+    background-color: #dc2626;
+    border: 1px solid #ef4444;
+    cursor: not-allowed;
+    position: relative;
+}
+
+.cell.hit::before,
+.cell.hit::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 70%;
+    background-color: #fff;
+    transform-origin: center;
+}
+
+.cell.hit::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.cell.hit::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* Miss Styles */
+.cell.miss {
+    background-color: #374151;
+    border: 1px solid #6b7280;
+    cursor: not-allowed;
+}
+
+.cell.miss::before {
+    content: '•';
+    color: #9ca3af;
+    font-size: 16px;
+}
+
+/* Game Status */
+#game-status {
+    font-size: 1.3em;
+    font-weight: bold;
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #16213e;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    min-height: 25px;
+}
+
+/* Computer Board - Hide Ships */
+#computer-board .cell.ship {
+    background-color: #0f3460;
+    border: 1px solid #16213e;
+}
+
+#computer-board .cell.ship::before {
+    display: none;
+}
+
+/* Game Over Overlay */
+.game-over-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.game-over-content {
+    background-color: #16213e;
+    padding: 40px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    border: 3px solid #0f3460;
+}
+
+.game-over-content h2 {
+    color: #eee;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.game-over-content button {
+    background-color: #1e40af;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.game-over-content button:hover {
+    background-color: #3b82f6;
+    transform: scale(1.05);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .game-container {
+        flex-direction: column;
+        gap: 30px;
+    }
+    
+    .board {
+        grid-template-columns: repeat(10, 30px);
+        grid-template-rows: repeat(10, 30px);
+    }
+    
+    .cell {
+        width: 30px;
+        height: 30px;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+}

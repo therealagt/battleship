@@ -54,6 +54,7 @@ function createGameboard() {
         placeShip(ship, x, y, orientation) {
             ship.place(x, y, orientation);
     
+            // Check for overlap
             for (let existingShip of this.ships) {
                 for (let shipCoord of ship.coordinates) {
                     for (let existingCoord of existingShip.coordinates) {
@@ -64,7 +65,22 @@ function createGameboard() {
                 }
             }
 
-        this.ships.push(ship);
+            // Check for adjacent ships (no touching allowed)
+            for (let existingShip of this.ships) {
+                for (let shipCoord of ship.coordinates) {
+                    for (let existingCoord of existingShip.coordinates) {
+                        const deltaX = Math.abs(shipCoord[0] - existingCoord[0]);
+                        const deltaY = Math.abs(shipCoord[1] - existingCoord[1]);
+                        
+                        // Check all 8 adjacent positions (including diagonals)
+                        if (deltaX <= 1 && deltaY <= 1 && !(deltaX === 0 && deltaY === 0)) {
+                            throw new Error('Ships can`t be adjacent to each other');
+                        }
+                    }
+                }
+            }
+
+            this.ships.push(ship);
         },
     
         receivedAttack(x, y) {
